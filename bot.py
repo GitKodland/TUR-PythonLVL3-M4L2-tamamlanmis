@@ -13,17 +13,17 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 manager = DatabaseManager(DATABASE)
 manager.create_tables()
 
-# A command for user registration
+#  Kullanıcı kaydı için bir komut
 @bot.command()
 async def start(ctx):
     user_id = ctx.author.id
     if user_id in manager.get_users():
-        await ctx.send("You are registered already!")
+        await ctx.send("Zaten kayıtlısınız!")
     else:
         manager.add_user(user_id, ctx.author.name)
-        await ctx.send("""Hi! Welcome! You have been successfully registered! You'll be receiving new images every minute, and you'll have a chance to get them! To do this, you need to click on the 'Get!' button! Only the first three users to click the 'Get!' button will get the image! =)""")
+        await ctx.send(""Merhaba! Hoş geldiniz! Başarılı bir şekilde kaydoldunuz! Her dakika yeni resimler alacaksınız ve bunları elde etme şansınız olacak! Bunu yapmak için “Al!” butonuna tıklamanız gerekiyor! Sadece “Al!” butonuna tıklayan ilk üç kullanıcı resmi alacaktır! =)""")
 
-# A rating command
+# Derecelendirme komutu.
 @bot.command()
 async def rating(ctx):
     res = manager.get_rating()
@@ -32,7 +32,7 @@ async def rating(ctx):
     res = f'|USER_NAME    |COUNT_PRIZE|\n{"_"*26}\n' + res
     await ctx.send(f"```\n{res}\n```")
 
-# # A scheduled task for sending images
+# Resim göndermek için zamanlanmış bir görev
 @tasks.loop(minutes=1)
 async def send_message():
     for user_id in manager.get_users():
@@ -46,7 +46,7 @@ async def send_message():
 async def send_image(user, image_path, prize_id):
     with open(image_path, 'rb') as img:
         file = discord.File(img)
-        button = discord.ui.Button(label="Get!", custom_id=str(prize_id))
+        button = discord.ui.Button(label="Al!", custom_id=str(prize_id))
         view = discord.ui.View()
         view.add_item(button)
         await user.send(file=file, view=view)
@@ -63,15 +63,15 @@ async def on_interaction(interaction):
                 img = manager.get_prize_img(custom_id)
                 with open(f'img/{img}', 'rb') as photo:
                     file = discord.File(photo)
-                    await interaction.response.send_message(file=file, content="Congratulations, you got the image!")
+                    await interaction.response.send_message(file=file, content="Tebrikler, resmi aldınız!")
             else:
-                await interaction.response.send_message(content="You got this image already!", ephemeral=True)
+                await interaction.response.send_message(content="Bu resme zaten sahipsiniz!", ephemeral=True)
         else:
-            await interaction.response.send_message(content="Unfortunately, someone has already grabbed this image...", ephemeral=True)
+            await interaction.response.send_message(content="Maalesef, bu resmi bir başkası çoktan aldı...", ephemeral=True)
 
 @bot.event
 async def on_ready():
-    print(f'Logged in as {bot.user}!')
+    print(f'{bot.user} olarak giriş yapıldı!')
     if not send_message.is_running():
         send_message.start()
 
